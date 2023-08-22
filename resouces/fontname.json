@@ -1,0 +1,22 @@
+{
+    "chinese": [
+        {
+            "value": "OPlusSans 3.0 Medium",
+            "label": "OPlusSans 3.0 Medium"
+        },
+        {
+            "value": "华文楷体",
+            "label": "华文楷体"
+        }
+    ],
+    "english": [
+        {
+            "value": "OPlusSans 3.0 Medium",
+            "label": "OPlusSans 3.0 Medium"
+        },
+        {
+            "value": "华文楷体",
+            "label": "华文楷体"
+        }
+    ]
+}

@@ -52,7 +52,7 @@ npm run dev
   ├── index.html
   ├── package.json
   └── vite.config.ts
-```
+```npm
 
 <!--
 ## Be aware

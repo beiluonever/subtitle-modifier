@@ -3,15 +3,33 @@ import { ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 import type { UploadProps, UploadUserFile } from "element-plus";
+import fontNameJson from "../../resouces/fontname.json";
 
 import {
   processAssFileAndDownload,
   getFileExtension,
   processZipFileAndDownload,
 } from "../components/subtitleProcess";
+import type { SubtitleSetting } from "../components/subtitleProcess";
 import { file } from "jszip";
 
 const fileList = ref<UploadUserFile[]>([]);
+
+let settings: SubtitleSetting;
+settings = {
+  globalFontNmae: "华文楷体",
+  globalFontSize: 10,
+  fontName: "华文楷体",
+  fontSize: 10,
+  color: "HFFFFFF",
+  EngFontName: "OPlusSans 3.0 Medium",
+  EngFontSize: 9,
+  EngColor: "H00FFFF",
+  marginV: 40
+};
+
+let ch_fontnames = fontNameJson["chinese"];
+let en_fontnames = fontNameJson["english"];
 
 const handleRemove: UploadProps["onRemove"] = (file, uploadFiles) => {
   console.log(file, uploadFiles);
@@ -66,9 +84,9 @@ function submitFiles() {
       const target = e.target;
       const fileString = target.result;
       if (extension == "ass") {
-        processAssFileAndDownload(e, fileString, fileName);
+        processAssFileAndDownload(e, fileString, fileName, settings);
       } else if (extension == "zip") {
-        processZipFileAndDownload(e, fileString);
+        processZipFileAndDownload(e, fileString, settings);
       }
     };
   });
@@ -77,23 +95,86 @@ function submitFiles() {
 
 <template>
   <div class="text-center m-4">
-    <el-upload
-      v-model:file-list="fileList"
-      class="upload-demo"
-      multiple
-      :on-preview="handlePreview"
-      :on-remove="handleRemove"
-      :before-remove="beforeRemove"
-      :limit="3"
-      :on-exceed="handleExceed"
-      :auto-upload="false"
-    >
-      <el-button type="primary">Click to upload</el-button>
-      <template #tip>
-        <div class="el-upload__tip">ass files or zip files</div>
-      </template>
-    </el-upload>
-    <el-button @click="submitFiles">submit</el-button>
+    <el-form label-width="2 em">
+      <el-form-item label="全局默认字号">
+        <el-input-number v-model="settings.globalFontSize" :min="1" :max="50" />
+      </el-form-item>
+
+      <el-form-item label="全局默认字体">
+        <el-select
+          v-model="settings.globalFontNmae"
+          class="m-2"
+          placeholder="Select"
+        >
+          <el-option
+            v-for="item in ch_fontnames"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="中文字号">
+        <el-input-number v-model="settings.fontSize" :min="1" :max="50" />
+      </el-form-item>
+
+      <el-form-item label="中文字体">
+        <el-select v-model="settings.fontName" class="m-2" placeholder="Select">
+          <el-option
+            v-for="item in ch_fontnames"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+<!-- 
+      <el-form-item label="中文字幕颜色">
+        <el-color-picker v-model="settings.EngColor" />
+      </el-form-item> -->
+
+      <el-form-item label="英文字号">
+        <el-input-number v-model="settings.EngFontSize" />
+      </el-form-item>
+
+      <el-form-item label="英文字体">
+        <el-select
+          v-model="settings.EngFontName"
+          class="m-2"
+          placeholder="Select"
+        >
+          <el-option
+            v-for="item in en_fontnames"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <!-- <el-form-item label="英文字幕颜色">
+        <el-color-picker v-model="settings.EngColor" />
+      </el-form-item> -->
+
+      <el-form-item label="上传字幕文件">
+        <el-upload
+          v-model:file-list="fileList"
+          class="upload-demo"
+          multiple
+          :on-preview="handlePreview"
+          :on-remove="handleRemove"
+          :before-remove="beforeRemove"
+          :limit="3"
+          :on-exceed="handleExceed"
+          :auto-upload="false"
+        >
+          <el-button type="primary">Click to upload</el-button>
+          <template #tip>
+            <div class="el-upload__tip">ass/zip files</div>
+          </template>
+        </el-upload>
+      </el-form-item>
+      <el-button @click="submitFiles">提交</el-button>
+    </el-form>
     <!-- <RouterLink to="/about">About</RouterLink> -->
   </div>
 </template>
