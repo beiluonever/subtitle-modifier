@@ -164,6 +164,7 @@ export {
   getFileExtension,
   extractFileName,
   processZipFileAndDownload,
+  Uint8ArrayToString,
   prefix,
 };
 export type { SubtitleSetting };

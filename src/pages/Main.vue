@@ -9,6 +9,7 @@ import {
   processAssFileAndDownload,
   getFileExtension,
   processZipFileAndDownload,
+  Uint8ArrayToString
 } from "../components/subtitleProcess";
 import type { SubtitleSetting } from "../components/subtitleProcess";
 import { file } from "jszip";
@@ -72,7 +73,7 @@ function submitFiles() {
     // readAsBinaryString file 将文件读取为二进制码，通常我们将它传送到后端，后端可以通过这段字符串存储文件
     // readAsDataURL file 将文件读取为 DataURL，一段以 data: 开头的字符串，这段字符串的实质就是 Data URL，Data URL是一种将小文件直接嵌入文档的方案。这里的小文件通常是指图像与 html 等格式的文件
     // readAsText file, [encoding] 将文件读取为文本，读取的结果即是这个文本文件中的内容
-    reader.readAsBinaryString(element.raw);
+    reader.readAsArrayBuffer(element.raw);
     // onabort 中断时触发
     // onerror 出错时触发
     // onload 文件读取成功完成时触发
@@ -83,8 +84,12 @@ function submitFiles() {
       // 读取文件内容
       const target = e.target;
       const fileString = target.result;
+      console.log(fileString)
       if (extension == "ass") {
-        processAssFileAndDownload(e, fileString, fileName, settings);
+        let encodedString = String.fromCodePoint.apply(null, new Uint8Array(fileString));
+        let decodedString = decodeURIComponent(escape(encodedString));//没有这一步中文会乱码
+        console.log(decodedString)
+        processAssFileAndDownload(e, decodedString, fileName, settings);
       } else if (extension == "zip") {
         processZipFileAndDownload(e, fileString, settings);
       }
