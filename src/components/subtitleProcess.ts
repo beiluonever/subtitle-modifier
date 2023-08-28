@@ -143,9 +143,11 @@ function processZipFileAndDownload(
             let zipEntryExtension = getFileExtension(zipEntry.name);
             if (zipEntryExtension == "ass") {
               console.log("content:", fileData);
+              let encodedString = Uint8ArrayToString(new Uint8Array(fileData));
+              let decodedString = decodeURIComponent(escape(encodedString));//没有这一步中文会乱码
               processAssFileAndDownload(
                 e,
-                Uint8ArrayToString(fileData),
+                decodedString,
                 zipEntry.name,
                 settings
               );

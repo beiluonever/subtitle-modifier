@@ -16,18 +16,17 @@ import { file } from "jszip";
 
 const fileList = ref<UploadUserFile[]>([]);
 
-let settings: SubtitleSetting;
-settings = {
+let settings = ref(<SubtitleSetting>{
   globalFontNmae: "华文楷体",
   globalFontSize: 10,
-  fontName: "华文楷体",
+  fontName: "OPlusSans 3.0 Medium",
   fontSize: 10,
   color: "HFFFFFF",
   EngFontName: "OPlusSans 3.0 Medium",
   EngFontSize: 9,
   EngColor: "H00FFFF",
   marginV: 40
-};
+});
 
 let ch_fontnames = fontNameJson["chinese"];
 let en_fontnames = fontNameJson["english"];
@@ -86,12 +85,11 @@ function submitFiles() {
       const fileString = target.result;
       console.log(fileString)
       if (extension == "ass") {
-        let encodedString = String.fromCodePoint.apply(null, new Uint8Array(fileString));
+        let encodedString = Uint8ArrayToString(new Uint8Array(fileString));
         let decodedString = decodeURIComponent(escape(encodedString));//没有这一步中文会乱码
-        console.log(decodedString)
-        processAssFileAndDownload(e, decodedString, fileName, settings);
+        processAssFileAndDownload(e, decodedString, fileName, settings.value);
       } else if (extension == "zip") {
-        processZipFileAndDownload(e, fileString, settings);
+        processZipFileAndDownload(e, fileString, settings.value);
       }
     };
   });
