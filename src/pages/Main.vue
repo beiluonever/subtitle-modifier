@@ -9,7 +9,7 @@ import {
   processAssFileAndDownload,
   getFileExtension,
   processZipFileAndDownload,
-  Uint8ArrayToString
+  Uint8ArrayToString,
 } from "../components/subtitleProcess";
 import type { SubtitleSetting } from "../components/subtitleProcess";
 import { file } from "jszip";
@@ -21,12 +21,22 @@ let settings = ref(<SubtitleSetting>{
   globalFontSize: 10,
   fontName: "OPlusSans 3.0 Medium",
   fontSize: 10,
-  color: "HFFFFFF",
+  color: "#FFFF00",
   EngFontName: "OPlusSans 3.0 Medium",
   EngFontSize: 9,
-  EngColor: "H00FFFF",
-  marginV: 40
+  EngColor: "#FFFF00",
+  marginV: 40,
 });
+
+const predefineColors = ref([
+  "#DC2026",
+  "#7E1616",
+  "#FFFEAD",
+  "#FCC252",
+  "#FDFCFA",
+  "#C0C1C1",
+  "#ffff00",
+]);
 
 let ch_fontnames = fontNameJson["chinese"];
 let en_fontnames = fontNameJson["english"];
@@ -83,10 +93,10 @@ function submitFiles() {
       // 读取文件内容
       const target = e.target;
       const fileString = target.result;
-      console.log(fileString)
+      console.log(fileString);
       if (extension == "ass") {
         let encodedString = Uint8ArrayToString(new Uint8Array(fileString));
-        let decodedString = decodeURIComponent(escape(encodedString));//没有这一步中文会乱码
+        let decodedString = decodeURIComponent(escape(encodedString)); //没有这一步中文会乱码
         processAssFileAndDownload(e, decodedString, fileName, settings.value);
       } else if (extension == "zip") {
         processZipFileAndDownload(e, fileString, settings.value);
@@ -99,7 +109,7 @@ function submitFiles() {
 <template>
   <div class="text-center m-4">
     <el-form label-width="2 em">
-      <el-form-item label="全局默认字号">
+      <!-- <el-form-item label="全局默认字号">
         <el-input-number v-model="settings.globalFontSize" :min="1" :max="50" />
       </el-form-item>
 
@@ -116,12 +126,10 @@ function submitFiles() {
             :value="item.value"
           />
         </el-select>
-      </el-form-item>
-      <el-form-item label="中文字号">
-        <el-input-number v-model="settings.fontSize" :min="1" :max="50" />
-      </el-form-item>
-
-      <el-form-item label="中文字体">
+      </el-form-item> -->
+      <el-row>
+      <el-col span="8">
+      <el-form-item label="中文">
         <el-select v-model="settings.fontName" class="m-2" placeholder="Select">
           <el-option
             v-for="item in ch_fontnames"
@@ -131,29 +139,56 @@ function submitFiles() {
           />
         </el-select>
       </el-form-item>
-<!-- 
-      <el-form-item label="中文字幕颜色">
-        <el-color-picker v-model="settings.EngColor" />
-      </el-form-item> -->
-
-      <el-form-item label="英文字号">
-        <el-input-number v-model="settings.EngFontSize" />
+      </el-col>
+        <el-col :span="8">
+            <el-form-item label="字体大小">
+        <el-input-number v-model="settings.fontSize" :min="1" :max="50" />
       </el-form-item>
+        </el-col>
+        <el-col span="4">
+          <el-form-item label="颜色">
+            <el-color-picker
+              color-format="hex"
+              :predefine="predefineColors"
+              v-model="settings.color"
+            />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col span="8">
+          <el-form-item label="外文">
+            <el-select
+              v-model="settings.EngFontName"
+              class="m-2"
+              placeholder="Select"
+            >
+              <el-option
+                v-for="item in en_fontnames"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+          </el-col>
 
-      <el-form-item label="英文字体">
-        <el-select
-          v-model="settings.EngFontName"
-          class="m-2"
-          placeholder="Select"
-        >
-          <el-option
-            v-for="item in en_fontnames"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
+          <el-col :span="8">
+            <el-form-item label="字体大小">
+            <el-input-number v-model="settings.EngFontSize" />
+            </el-form-item>
+          </el-col>
+        <el-col span="4">
+          <el-form-item label="颜色">
+            <el-color-picker
+              color-format="hex"
+              :predefine="predefineColors"
+              v-model="settings.EngColor"
+            />
+          </el-form-item>
+        </el-col>
+      </el-row>
+
       <!-- <el-form-item label="英文字幕颜色">
         <el-color-picker v-model="settings.EngColor" />
       </el-form-item> -->
