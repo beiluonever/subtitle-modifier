@@ -1,38 +1,50 @@
 <script setup lang="ts">
-import Main from './pages/Main.vue'
+import { onMounted } from 'vue'
+// import SimpleTest from './components/SimpleTest.vue'
+import MainEditor from './components/MainEditor.vue'
+import { ElMessage } from 'element-plus'
+
+onMounted(() => {
+  // 检查Electron环境
+  if (window.electronAPI) {
+    console.log('Electron API is available')
+  } else {
+    console.warn('Electron API is not available')
+    ElMessage.warning('部分功能可能受限，请在Electron环境中运行')
+  }
+})
 </script>
 
 <template>
-  <Main />
-  <!-- <div class="flex-center">
-    Place static files into the <code>/public</code> folder
-    <img style="width: 2.4em; margin-left: .4em;" src="/logo.svg" alt="Logo">
-  </div> -->
+  <div id="app">
+    <!-- <SimpleTest /> -->
+    <MainEditor />
+  </div>
 </template>
 
 <style>
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+* {
+  box-sizing: border-box;
 }
 
-.logo.electron:hover {
-  filter: drop-shadow(0 0 2em #9FEAF9);
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+html {
+  height: 100vh;
 }
 </style>

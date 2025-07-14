@@ -1,0 +1,21 @@
+[Script Info]
+Title: Multilingual Example
+ScriptType: v4.00+
+WrapStyle: 0
+PlayResX: 1920
+PlayResY: 1080
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Chinese,华文楷体,16,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1
+Style: English,Arial,14,&H00FFFF00,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:01.00,0:00:03.00,Chinese,,0,0,0,,你好世界
+Dialogue: 0,0:00:01.00,0:00:03.00,English,,0,0,0,,Hello World
+Dialogue: 0,0:00:04.00,0:00:06.00,Chinese,,0,0,0,,这是一个多语言字幕示例
+Dialogue: 0,0:00:04.00,0:00:06.00,English,,0,0,0,,This is a multilingual subtitle example
+Dialogue: 0,0:00:07.00,0:00:09.00,Chinese,,0,0,0,,测试中英文混合显示
+Dialogue: 0,0:00:07.00,0:00:09.00,English,,0,0,0,,Testing Chinese and English mixed display

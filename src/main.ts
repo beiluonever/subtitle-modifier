@@ -3,7 +3,8 @@ import "./style.css"
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import App from './App.vue'
-import './samples/node-api'
+// 临时注释掉Node.js API示例，因为它不能在渲染进程中运行
+// import './samples/node-api'
 
 createApp(App)
   .use(ElementPlus)

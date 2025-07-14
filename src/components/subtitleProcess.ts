@@ -1,3 +1,6 @@
+// 这个文件已被重构，新的字幕处理逻辑在 src/services/subtitle/SubtitleProcessor.ts
+// 保留这个文件是为了向后兼容，但建议使用新的架构
+
 import { parse, stringify } from "ass-compiler";
 import * as JSZip from "jszip";
 

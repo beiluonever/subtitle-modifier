@@ -1,6 +1,10 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, Notification } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
+import { FileService } from '../services/FileService'
+
+// 初始化服务
+const fileService = new FileService()
 
 // The built directory structure
 //
@@ -29,50 +33,81 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0)
 }
 
-// Remove electron security warnings
-// This warning only shows in development mode
-// Read more on https://www.electronjs.org/docs/latest/tutorial/security
-// process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
+// 设置内容安全策略
+app.whenReady().then(() => {
+  // 注册安全的IPC处理器
+  setupSecureIPC()
+})
 
 let win: BrowserWindow | null = null
-// Here, you can also use other preload
+// 使用安全的preload脚本
 const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
 
 async function createWindow() {
   win = new BrowserWindow({
-    title: 'Main window',
+    title: 'Subtitle Modifier',
     icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    width: 1200,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
     webPreferences: {
       preload,
-      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-      // Consider using contextBridge.exposeInMainWorld
-      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-      nodeIntegration: true,
-      contextIsolation: false,
+      // 启用安全配置
+      nodeIntegration: false,
+      contextIsolation: true,
+      enableRemoteModule: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
+      // 设置内容安全策略
+      additionalArguments: ['--disable-web-security']
     },
   })
 
-  if (process.env.VITE_DEV_SERVER_URL) { // electron-vite-vue#298
+  // 设置内容安全策略
+  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+        ]
+      }
+    })
+  })
+
+  if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url)
-    // Open devTool if the app is not packaged
-    win.webContents.openDevTools()
+    // 仅在开发模式下打开开发者工具
+    if (process.env.NODE_ENV === 'development') {
+      win.webContents.openDevTools()
+    }
   } else {
     win.loadFile(indexHtml)
   }
 
-  // Test actively push message to the Electron-Renderer
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', new Date().toLocaleString())
+  // 清理资源
+  win.on('closed', () => {
+    fileService.cleanupTempFiles()
   })
 
-  // Make all links open with the browser, not with the application
+  // 安全的外部链接处理
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https:')) shell.openExternal(url)
+    if (url.startsWith('https:') || url.startsWith('http:')) {
+      shell.openExternal(url)
+    }
     return { action: 'deny' }
   })
-  // win.webContents.on('will-navigate', (event, url) => { }) #344
+
+  // 阻止导航到外部URL
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file:') && !url.startsWith('http://127.0.0.1') && !url.startsWith('http://localhost')) {
+      event.preventDefault()
+    }
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -84,7 +119,6 @@ app.on('window-all-closed', () => {
 
 app.on('second-instance', () => {
   if (win) {
-    // Focus on the main window if the user tried to open another
     if (win.isMinimized()) win.restore()
     win.focus()
   }
@@ -99,19 +133,105 @@ app.on('activate', () => {
   }
 })
 
-// New window example arg: new windows url
-ipcMain.handle('open-win', (_, arg) => {
-  const childWindow = new BrowserWindow({
-    webPreferences: {
-      preload,
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
+// 设置安全的IPC处理器
+function setupSecureIPC() {
+  // 文件操作IPC
+  ipcMain.handle('file:read', async (_, filePath: string) => {
+    try {
+      return await fileService.readFile(filePath)
+    } catch (error) {
+      throw new Error(`Failed to read file: ${error.message}`)
+    }
   })
 
-  if (process.env.VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${url}#${arg}`)
-  } else {
-    childWindow.loadFile(indexHtml, { hash: arg })
-  }
-})
+  ipcMain.handle('file:write', async (_, filePath: string, content: string) => {
+    try {
+      await fileService.writeFile(filePath, content)
+      return true
+    } catch (error) {
+      throw new Error(`Failed to write file: ${error.message}`)
+    }
+  })
+
+  ipcMain.handle('file:exists', async (_, filePath: string) => {
+    try {
+      return await fileService.fileExists(filePath)
+    } catch (error) {
+      return false
+    }
+  })
+
+  ipcMain.handle('file:showOpenDialog', async (_, options: any) => {
+    return await fileService.showOpenDialog(options)
+  })
+
+  ipcMain.handle('file:showSaveDialog', async (_, options: any) => {
+    return await fileService.showSaveDialog(options)
+  })
+
+  // 系统信息IPC
+  ipcMain.handle('system:platform', () => {
+    return process.platform
+  })
+
+  ipcMain.handle('system:version', () => {
+    return process.version
+  })
+
+  ipcMain.handle('system:showNotification', (_, title: string, message: string) => {
+    new Notification({
+      title,
+      body: message
+    }).show()
+  })
+
+  // 窗口操作IPC
+  ipcMain.handle('window:minimize', () => {
+    if (win) win.minimize()
+  })
+
+  ipcMain.handle('window:maximize', () => {
+    if (win) {
+      if (win.isMaximized()) {
+        win.unmaximize()
+      } else {
+        win.maximize()
+      }
+    }
+  })
+
+  ipcMain.handle('window:close', () => {
+    if (win) win.close()
+  })
+
+  ipcMain.handle('window:setTitle', (_, title: string) => {
+    if (win) win.setTitle(title)
+  })
+
+  // 字幕处理IPC (TODO: 实现具体逻辑)
+  ipcMain.handle('subtitle:process', async (_, content: string, settings: any) => {
+    // 这里将连接到字幕处理引擎
+    return content
+  })
+
+  ipcMain.handle('subtitle:validate', async (_, content: string, format: string) => {
+    // 这里将实现字幕格式验证
+    return true
+  })
+
+  // 批量处理IPC (TODO: 实现具体逻辑)
+  ipcMain.handle('batch:processFiles', async (_, files: string[], settings: any) => {
+    // 这里将实现批量处理逻辑
+    return { success: true, processedFiles: files }
+  })
+
+  ipcMain.handle('batch:extractArchive', async (_, archivePath: string) => {
+    // 这里将实现压缩包解压逻辑
+    return []
+  })
+
+  ipcMain.handle('batch:createArchive', async (_, files: string[], outputPath: string) => {
+    // 这里将实现压缩包创建逻辑
+    return true
+  })
+}

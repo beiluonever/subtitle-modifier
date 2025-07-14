@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Debug Test Page</h1>
+    <div id="app">Loading...</div>
+    
+    <script>
+        console.log('Debug page loaded');
+        
+        // 检查是否在Electron环境中
+        if (window.electronAPI) {
+            console.log('Electron API detected:', window.electronAPI);
+        } else {
+            console.log('No Electron API detected');
+        }
+        
+        // 尝试访问main.ts
+        fetch('/src/main.ts')
+            .then(response => response.text())
+            .then(text => {
+                console.log('main.ts loaded successfully');
+                console.log('Length:', text.length);
+            })
+            .catch(error => {
+                console.error('Failed to load main.ts:', error);
+            });
+            
+        // 检查Vue是否可用
+        setTimeout(() => {
+            if (window.Vue) {
+                console.log('Vue is available:', window.Vue);
+            } else {
+                console.log('Vue is not available on window');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
